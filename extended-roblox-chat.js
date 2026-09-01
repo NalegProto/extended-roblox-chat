@@ -2,7 +2,7 @@
 // @name        Extended Roblox Chat
 // @namespace   https://github.com/NalegProto
 // @icon        https://images.rbxcdn.com/e854eb7b2951ac03edba9a2681032bba.ico
-// @version     2026.08.31
+// @version     2026.09.01
 // @description Adds a fullscreen to Roblox Web's private chat
 // @author      Naleg
 //
@@ -59,6 +59,38 @@ function fullscreenClicked(fsButton, convContainer) {
   }
 }
 
+function openChatSettings() {
+  // Create settings elements
+  const settingDiv = document.createElement("div");
+  settingDiv.id = "extrbxchat-settings-menu"
+  settingDiv.classList.add("extrbxchat-settings-bg");
+  settingDiv.innerHTML = `
+<div class="extrbxchat-settings">
+    <h1 style="text-align: center;">Extended Roblox Chat</h1>
+    <label for="userBubbleColor">Your bubble color</label>
+    <input id="userBubbleColor" type="color" style="border: none;">
+    <label for="otherBubbleColor">Others' bubble color</label>
+    <input id="otherBubbleColor" type="color" style="border: none;">
+    <label for="widthFullscreen">% Width of fullscreen chat</label>
+    <input id="widthFullscreen" type="number" min="30" max="100" value="90" step="1">
+    <label for="heightFullscreen">% Height of fullscreen chat</label>
+    <input id="heightFullscreen" type="number" min="30" max="100" value="90" step="1">
+    <button id="closeERCSettings" style="
+        margin-top: 5px;
+        width: fit-content;
+    ">Close</button>
+</div>
+  `
+
+  document.body.appendChild(settingDiv);
+  document.getElementById("closeERCSettings").onclick = closeChatSettings;
+}
+
+function closeChatSettings() {
+  const settingsDiv = document.getElementById("extrbxchat-settings-menu");
+  settingsDiv.remove();
+}
+
 var fsRightStorage = "";
 var fullscreened = false;
 
@@ -110,12 +142,60 @@ beegChatStyle.innerHTML = `
   background-position: 0px 0px;
   background-size: 20px auto;
 }
+
+.icon-extrbxchat-chat-settings {
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij4KCiAgICA8Zz4KICAgICAgICA8cGF0aCBmaWxsPSJub25lIiBkPSJNMCAwaDI0djI0SDB6Ij48L3BhdGg+CiAgICAgICAgPHBhdGggZD0iTTIyIDEyaC0yVjVINHYxMy4zODVMNS43NjMgMTdIMTJ2Mkg2LjQ1NUwyIDIyLjVWNGExIDEgMCAwIDEgMS0xaDE4YTEgMSAwIDAgMSAxIDF2OHptLTcuODU1IDcuMDcxYTQuMDA0IDQuMDA0IDAgMCAxIDAtMi4xNDJsLS45NzUtLjU2MyAxLTEuNzMyLjk3Ni41NjNBMy45OTYgMy45OTYgMCAwIDEgMTcgMTQuMTI2VjEzaDJ2MS4xMjZjLjcxNS4xODQgMS4zNTMuNTYgMS44NTQgMS4wNzFsLjk3Ni0uNTYzIDEgMS43MzItLjk3NS41NjNhNC4wMDQgNC4wMDQgMCAwIDEgMCAyLjE0MmwuOTc1LjU2My0xIDEuNzMyLS45NzYtLjU2M2MtLjUwMS41MS0xLjE0Ljg4Ny0xLjg1NCAxLjA3MVYyM2gtMnYtMS4xMjZhMy45OTYgMy45OTYgMCAwIDEtMS44NTQtMS4wNzFsLS45NzYuNTYzLTEtMS43MzIuOTc1LS41NjN6TTE4IDIwYTIgMiAwIDEgMCAwLTQgMiAyIDAgMCAwIDAgNHoiIGZpbGw9IiNGRkZGRkYiPjwvcGF0aD4KICAgIDwvZz4KCjwvc3ZnPg==");
+  background-size: contain;
+  height: 28px;
+  width: 28px;
+  background-color: unset;
+  background-position: 0px 0px;
+  border: none;
+  vertical-align: middle;
+}
+
+.extrbxchat-chat-setting-opt {
+  border: none;
+}
+
+.extrbxchat-settings-bg {
+  position: fixed;
+  height: 100%;
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  top: 0px;
+  z-index: 2000;
+  align-content: center;
+}
+
+.extrbxchat-settings {
+  height: 70%;
+  width: 25%;
+  background-color: var(--color-action-over-media-foreground);
+  margin: auto;
+  border-radius: 2vh;
+  display: flex;
+  flex-direction: column;
+  column-count: 2;
+  padding: 2px 10px;
+}
 `
 
 document.head.appendChild(beegChatStyle);
 
-// observe chat container
-const dialogContainer = document.getElementById("dialogs");
+// Add settings button to topright navbar
+/*
+const topRightNavbar = document.querySelector("#right-navigation-header > .navbar-right > .rbx-navbar-icon-group");
+
+const chatSettingsLi = document.createElement("li");
+chatSettingsLi.id = "extrbxchat-settings";
+chatSettingsLi.style.position = "relative";
+topRightNavbar.appendChild(chatSettingsLi)
+
+const chatSettingsBut = document.createElement("button");
+chatSettingsBut.classList.add("icon-extrbxchat-chat-settings");
+chatSettingsLi.appendChild(chatSettingsBut);
+*/
 
 const observer = new MutationObserver(function(mutations, observer) {
   console.log("Detected mutation");
@@ -130,6 +210,8 @@ const observer = new MutationObserver(function(mutations, observer) {
   // => Only if it's an attribute mutation
   // => And we're fullscreened
   // => And style.right is not empty
+  // Settings (id navbar-settings)
+  // => Only if we open them (adding node)
 
   // Those two edits might be a bit epileptic, since I don't know what's resetting them and I'm pretty sure I can't re-edit before it's rendered
   // Probably a script in the background doing it
@@ -138,9 +220,10 @@ const observer = new MutationObserver(function(mutations, observer) {
     const mutTarget = v.target;
 
     // boooo nested ifs
-    // Checking if chat container
-    if (mutTarget.id.startsWith("conv_")) {
-      if (v.type == "childList") {
+    if (v.type == "childList") {
+
+      // Checking if chat container
+      if (mutTarget.id.startsWith("conv_")) {
         if (v.addedNodes.length >= 1) {
           if (v.addedNodes[0].id != "fullscreenChatBackground") {
             // build id of message container
@@ -164,6 +247,23 @@ const observer = new MutationObserver(function(mutations, observer) {
           }
         }
       }
+
+      // Checking if settings
+      if (mutTarget.id == "navbar-settings") {
+        if (v.addedNodes.length >= 1) {
+          const popover = document.getElementById("settings-popover-menu");
+
+          // Create option
+          const chatsetLi = document.createElement("li");
+          const chatsetButton = document.createElement("button");
+          chatsetButton.innerText = "Chat Settings";
+
+          chatsetLi.appendChild(chatsetButton);
+          popover.insertBefore(chatsetLi, popover.children[1]);
+
+          chatsetButton.onclick = openChatSettings;
+        }
+      }
     }
 
     if (v.type == "attributes") {
@@ -179,8 +279,21 @@ const observer = new MutationObserver(function(mutations, observer) {
   }
 });
 
+// observe chat container
+const dialogContainer = document.getElementById("dialogs");
+
 observer.observe(dialogContainer, {
   childList: true,
   attributes: true,
   subtree: true
 });
+
+// observe when settings open
+const settingsButton = document.getElementById("navbar-settings");
+
+observer.observe(settingsButton, {
+  childList: true
+})
+
+
+
