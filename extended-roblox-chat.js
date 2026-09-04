@@ -2,7 +2,7 @@
 // @name        Extended Roblox Chat
 // @namespace   https://github.com/NalegProto
 // @icon        https://images.rbxcdn.com/e854eb7b2951ac03edba9a2681032bba.ico
-// @version     2026.09.01
+// @version     2026.09.04
 // @description Adds a fullscreen to Roblox Web's private chat
 // @author      Naleg
 //
@@ -67,14 +67,12 @@ function openChatSettings() {
   settingDiv.innerHTML = `
 <div class="extrbxchat-settings">
     <h1 style="text-align: center;">Extended Roblox Chat</h1>
-    <label for="userBubbleColor">Your bubble color</label>
+    <label for="userBubbleColor">Your bubble color in filtered chats</label>
     <input id="userBubbleColor" type="color" style="border: none;">
+    <label for="userTrustedBubbleColor">Your bubble color in unfiltered chats</label>
+    <input id="userTrustedBubbleColor" type="color" style="border: none;">
     <label for="otherBubbleColor">Others' bubble color</label>
     <input id="otherBubbleColor" type="color" style="border: none;">
-    <label for="widthFullscreen">% Width of fullscreen chat</label>
-    <input id="widthFullscreen" type="number" min="30" max="100" value="90" step="1">
-    <label for="heightFullscreen">% Height of fullscreen chat</label>
-    <input id="heightFullscreen" type="number" min="30" max="100" value="90" step="1">
     <button id="closeERCSettings" style="
         margin-top: 5px;
         width: fit-content;
@@ -83,13 +81,66 @@ function openChatSettings() {
   `
 
   document.body.appendChild(settingDiv);
-  document.getElementById("closeERCSettings").onclick = closeChatSettings;
+
+  const userBubbleColor = settingDiv.querySelector("#userBubbleColor")
+  const userTrustedBubbleColor = settingDiv.querySelector("#userTrustedBubbleColor")
+  const otherBubbleColor = settingDiv.querySelector("#otherBubbleColor")
+  const closeButton = settingDiv.querySelector("#closeERCSettings");
+
+  // Put value as saved elem if present
+
+  if (window.localStorage.getItem("ERC.outboundBubbleColor")) {
+    userBubbleColor.value = window.localStorage.getItem("ERC.outboundBubbleColor");
+  }
+
+  if (window.localStorage.getItem("ERC.outboundTrustedBubbleColor")) {
+    userTrustedBubbleColor.value = window.localStorage.getItem("ERC.outboundTrustedBubbleColor");
+  }
+
+  if (window.localStorage.getItem("ERC.inboundBubbleColor")) {
+    otherBubbleColor.value = window.localStorage.getItem("ERC.inboundBubbleColor");
+  }
+
+  // Give each input a function
+  // I have learnt of HTMLElement.querySelector and I WILL overuse it
+
+  closeButton.onclick = closeChatSettings;
+
+  userBubbleColor.onchange = () => {
+    window.localStorage.setItem("ERC.outboundBubbleColor", userBubbleColor.value)
+  }
+
+  userTrustedBubbleColor.onchange = () => {
+    window.localStorage.setItem("ERC.outboundTrustedBubbleColor", userTrustedBubbleColor.value)
+  }
+
+  otherBubbleColor.onchange = () => {
+    window.localStorage.setItem("ERC.inboundBubbleColor", otherBubbleColor.value)
+  }
 }
 
 function closeChatSettings() {
   const settingsDiv = document.getElementById("extrbxchat-settings-menu");
   settingsDiv.remove();
+  applySavedChatSettings();
 }
+
+function applySavedChatSettings() {
+  if (window.localStorage.getItem("ERC.outboundBubbleColor")) {
+    document.documentElement.style.setProperty("--commOutboundColor", window.localStorage.getItem("ERC.outboundBubbleColor"))
+  }
+
+  if (window.localStorage.getItem("ERC.outboundTrustedBubbleColor")) {
+    document.documentElement.style.setProperty("--trustedCommOutboundColor", window.localStorage.getItem("ERC.outboundTrustedBubbleColor"))
+  }
+
+  /*
+  if (window.localStorage.getItem("ERC.inboundBubbleColor")) {
+    document.documentElement.style.setProperty("--commInboundColor", window.localStorage.getItem("ERC.inboundBubbleColor"))
+  }
+  */
+}
+// TODO : Load chat settings
 
 var fsRightStorage = "";
 var fullscreened = false;
@@ -102,8 +153,12 @@ beegChatStyle.innerHTML = `
   --currChatHeight: 360px;
   --currChatWidth: 360px;
 
-  --exitFsIcon: url("data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz48IS0tIFVwbG9hZGVkIHRvOiBTVkcgUmVwbywgd3d3LnN2Z3JlcG8uY29tLCBHZW5lcmF0b3I6IFNWRyBSZXBvIE1peGVyIFRvb2xzIC0tPg0KPHN2ZyB3aWR0aD0iODAwcHgiIGhlaWdodD0iODAwcHgiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4NCjxwYXRoIGQ9Ik0yMS43MDkyIDIuMjk1MDJDMjEuODA0MSAyLjM5MDQgMjEuODc1NyAyLjUwMDE0IDIxLjkyNDEgMi42MTcyMkMyMS45NzI3IDIuNzM0MjUgMjEuOTk5NiAyLjg2MjUgMjIgMi45OTdMMjIgM1Y5QzIyIDkuNTUyMjggMjEuNTUyMyAxMCAyMSAxMEMyMC40NDc3IDEwIDIwIDkuNTUyMjggMjAgOVY1LjQxNDIxTDE0LjcwNzEgMTAuNzA3MUMxNC4zMTY2IDExLjA5NzYgMTMuNjgzNCAxMS4wOTc2IDEzLjI5MjkgMTAuNzA3MUMxMi45MDI0IDEwLjMxNjYgMTIuOTAyNCA5LjY4MzQyIDEzLjI5MjkgOS4yOTI4OUwxOC41ODU4IDRIMTVDMTQuNDQ3NyA0IDE0IDMuNTUyMjggMTQgM0MxNCAyLjQ0NzcyIDE0LjQ0NzcgMiAxNSAySDIwLjk5OThDMjEuMjc0OSAyIDIxLjUyNDIgMi4xMTEwNiAyMS43MDUgMi4yOTA3OEwyMS43MDkyIDIuMjk1MDJaIiBmaWxsPSIjMDAwMDAwIi8+DQo8cGF0aCBkPSJNMTAuNzA3MSAxNC43MDcxTDUuNDE0MjEgMjBIOUM5LjU1MjI4IDIwIDEwIDIwLjQ0NzcgMTAgMjFDMTAgMjEuNTUyMyA5LjU1MjI4IDIyIDkgMjJIMy4wMDA2OUwyLjk5NyAyMkMyLjc0MzAxIDIxLjk5OTIgMi40ODkyNCAyMS45MDIzIDIuMjk1MDIgMjEuNzA5MkwyLjI5MDc4IDIxLjcwNUMyLjE5NTk1IDIxLjYwOTYgMi4xMjQzMiAyMS40OTk5IDIuMDc1ODggMjEuMzgyOEMyLjAyNjk5IDIxLjI2NDkgMiAyMS4xMzU2IDIgMjFWMTVDMiAxNC40NDc3IDIuNDQ3NzIgMTQgMyAxNEMzLjU1MjI4IDE0IDQgMTQuNDQ3NyA0IDE1VjE4LjU4NThMOS4yOTI4OSAxMy4yOTI5QzkuNjgzNDIgMTIuOTAyNCAxMC4zMTY2IDEyLjkwMjQgMTAuNzA3MSAxMy4yOTI5QzExLjA5NzYgMTMuNjgzNCAxMS4wOTc2IDE0LjMxNjYgMTAuNzA3MSAxNC43MDcxWiIgZmlsbD0iIzAwMDAwMCIvPg0KPC9zdmc+");
-  --fsIcon:
+  --trustedCommOutboundColor: #335fff;
+  --commOutboundColor: #494d5a;
+  /*
+    Inbound color is managed by var --color-surface-200
+    yes they use a var for that but not for the other bubbles
+  */
 }
 
 .beegChat * {
@@ -178,6 +233,17 @@ beegChatStyle.innerHTML = `
   flex-direction: column;
   column-count: 2;
   padding: 2px 10px;
+}
+
+/* Chat bubbles style replacing, dark theme only cuz light theme users don't exist frfr */
+.dark-theme .dialogs .dialog-container .dialog-message-container .dialog-message.trusted-comms {
+  background-color: var(--trustedCommOutboundColor);
+  border-color: var(--trustedCommOutboundColor);
+}
+
+.dark-theme .dialogs .dialog-container .dialog-message-container .dialog-message {
+  background-color: var(--commOutboundColor);
+  border-color: var(--commOutboundColor);
 }
 `
 
@@ -295,5 +361,5 @@ observer.observe(settingsButton, {
   childList: true
 })
 
-
+applySavedChatSettings();
 
